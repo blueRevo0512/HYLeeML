@@ -4,9 +4,15 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import csv
-train_data = pd.read_csv('./covid.train.csv').drop(columns=['id']).values
+selected_columns = [38,39,40,41,49,52,53,
+					54,55,56,57,65,68,69,
+					70,71,72,73,81,84,85,
+					86,87,88,89,97,100,101,
+					102,103,104,105,113,116,117]
+train_data = pd.read_csv('./covid.train.csv').iloc[:, selected_columns].values
 x_train = train_data[:, :-1]
 y_train = train_data[:, -1]
+print(x_train.shape)
 class COVID19Dataset(Dataset):
 	def __init__(self, x, y=None):
 		if y is None:
@@ -31,8 +37,6 @@ class My_model(nn.Module):
 			nn.ReLU(),
 			nn.Linear(32, 32),
 			nn.ReLU(),
-			nn.Linear(32, 32),
-			nn.ReLU(),
 			nn.Linear(32, 1)
 		)
 	def forward(self, x):
@@ -52,8 +56,9 @@ for epoch in range(n_epochs):
 		loss.backward()
 		optimizer.step()
 		optimizer.zero_grad()
-		if epoch % 100 == 0:
-			print(f'Epoch {epoch}, Loss: {loss.item()}')
+	if epoch % 100 == 0:
+		print(f'Epoch {epoch}, Loss: {loss.item()}')
+torch.save(model.state_dict(), 'model.pth')
 # test_data = pd.read_csv('./covid.test.csv').drop(columns=['id']).values
 # x_test = test_data[:, :-1]
 # y_test = test_data[:, -1]
@@ -71,7 +76,12 @@ for epoch in range(n_epochs):
 # 	print(f'Test Loss: {avg_loss}')
 # print(f'Test Loss: {avg_loss}')
 # torch.save(model.state_dict(), 'model.pth')
-test_data = pd.read_csv('./covid.test.csv').drop(columns=['id']).values
+selected_columns = [38,39,40,41,49,52,53,
+					54,55,56,57,65,68,69,
+					70,71,72,73,81,84,85,
+					86,87,88,89,97,100,101,
+					102,103,104,105,113,116]
+test_data = pd.read_csv('./covid.test.csv').iloc[:, selected_columns].values
 test_dataset = COVID19Dataset(test_data)
 test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False, pin_memory=True)
 model.eval()
@@ -89,4 +99,4 @@ def save_pred(preds, file):
 		for i, p in enumerate(preds):
 			writer.writerow([i, p])
 save_pred(preds, 'pred.csv')
-torch.save(model.state_dict(), 'model.pth')
+
